@@ -1,0 +1,12 @@
+default_nettype none
+module full_adder(S, Cout, A, B, Cin);
+  input wire A, B, Cin; output wire S, Cout;
+  wire andBCin, andACin, andAB;
+
+  assign S = A BCin;
+  assign andAB = A & B;
+  assign andBCin = B & Cin;
+  assign andACin = A & Cin;
+  assign Cout = andAB | andBCin | andACin;
+
+endmodule
