@@ -1,0 +1,10 @@
+module generate_propagate_unit(G, P, X, Y);
+
+    // Input and output ports of the propagation unit
+    output wire [15:0] G, P;
+    input wire [15:0] X, Y;
+
+    assign G = X & Y;
+    assign P = X ^ Y;
+
+endmodule
