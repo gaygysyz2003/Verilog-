@@ -1,0 +1,21 @@
+module priority_encoder(
+    input wire [3:0] W,     // 4-bit input signal
+    output reg [1:0] Y,     // 2-bit output
+    output wire zero        // Zero flag
+);
+
+    // Assign zero if all bits are zero
+    assign zero = (W == 4'b0000);
+
+    // Priority logic
+    always @(*) begin
+        case (W)
+            4'b0001: Y = 2'b00; // W[0] is active
+            4'b001?: Y = 2'b01; // W[1] is active
+            4'b01??: Y = 2'b10; // W[2] is active
+            4'b1???: Y = 2'b11; // W[3] is active
+            default: Y = 2'b00; // Unspecified
+        endcase
+    end
+
+endmodule
