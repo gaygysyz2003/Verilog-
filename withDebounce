@@ -1,0 +1,37 @@
+`timescale 1ns / 1ps
+`default_nettype none
+
+module withDebounce(LEDs, BTN, Clk);
+    output reg [3:0] LEDs;
+    input wire BTN, Clk;
+
+    /*-this is a keyword we have not seen yet!*
+    *-as the name implies, it is a parameter *
+    * that can be changed at compile time... */
+    parameter n = 5;
+
+    wire notMsb, Rst, En, Debounced;
+    reg Synchronizer0, Synchronized;
+    reg [n-1:0] Count;
+
+    reg edge_detect0;
+    wire rising_edge;
+    /*This is just for simulation*/
+    initial
+        LEDs = 0;
+
+    /**************************************/
+    /* Debounce circuitry!!!              */
+    /**************************************/
+
+    always @(posedge Clk)
+    begin
+        Synchronizer0 <= BTN; // store button state is synchronized register
+        Synchronized <= Synchronizer0; // further synchronize with another register to reduce noise
+    end
+
+    always @(posedge Clk)
+    if (Rst) // reset condition
+        Count <= 0; // reset counter to 0
+    else if (En) // check if count is less than 10
+        Count <= Count + 1; // increment count by 1
