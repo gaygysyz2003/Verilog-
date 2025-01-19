@@ -1,0 +1,19 @@
+module two_four_decoder(W, En, Y);
+    input wire [1:0] W;    // W is a 2-bit wide input
+    input wire En;         // Enable signal
+    output reg [3:0] Y;    // Y is a 4-bit wide output
+
+    always @(W or En) begin
+        if (En == 1'b1) begin
+            case (W)
+                2'b00: Y = 4'b0001; // If W is 00, activate the first output
+                2'b01: Y = 4'b0010; // If W is 01, activate the second output
+                2'b10: Y = 4'b0100; // If W is 10, activate the third output
+                2'b11: Y = 4'b1000; // If W is 11, activate the fourth output
+            endcase
+        end else begin
+            // If En is low, deactivate all outputs
+            Y = 4'b0000;
+        end
+    end
+endmodule
