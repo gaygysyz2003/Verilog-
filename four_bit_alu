@@ -1,0 +1,22 @@
+`default_nettype none
+
+module four_bit_alu(Result, Overflow, opA, opB, ctrl);
+    output wire [3:0] Result;
+    output wire Overflow;
+    input wire [3:0] opA, opB;
+    input wire [1:0] ctrl;
+
+    wire [3:0] sumAB, andAB;
+    wire overflow2;
+
+    assign andAB = opA & opB;
+
+    add_sub al(sumAB, overflow2, opA, opB, ctrl[1]);
+
+    assign Result[0] = (sumAB[0] & ctrl) | (~ctrl & andAB[0]);
+    assign Result[1] = (sumAB[1] & ctrl) | (~ctrl & andAB[1]);
+    assign Result[2] = (sumAB[2] & ctrl) | (~ctrl & andAB[2]);
+    assign Result[3] = (sumAB[3] & ctrl) | (~ctrl & andAB[3]);
+
+    assign Overflow = overflow2 & ctrl;
+endmodule
