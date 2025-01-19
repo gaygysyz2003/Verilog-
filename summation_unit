@@ -1,0 +1,8 @@
+module summation_unit(S, P, C);
+
+    output wire [15:0] S;
+    input wire [15:0] P, C;
+
+    assign S = P ^ C;
+
+endmodule
