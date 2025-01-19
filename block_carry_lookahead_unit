@@ -1,0 +1,16 @@
+module block_carry_lookahead_unit(G_star, P_star, C, G, P, C0);
+
+    // Input and output ports of block carry unit
+    output wire G_star, P_star;
+    output wire [3:1] C;
+    input wire [3:0] G, P;
+    input wire C0;
+
+    assign G_star = G[3] | (P[3] & G[2]) | (P[3] & P[2] & G[1]) | (P[3] & P[2] & P[1] & G[0]);
+    assign P_star = P[3] & P[2] & P[1] & P[0];
+
+    assign C[1] = G[0] | (P[0] & C0);
+    assign C[2] = G[1] | (P[1] & G[0]) | (P[1] & P[0] & C0);
+    assign C[3] = G[2] | (P[2] & G[1]) | (P[2] & P[1] & G[0]) | (P[2] & P[1] & P[0] & C0);
+
+endmodule
