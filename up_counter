@@ -1,0 +1,34 @@
+module up_counter(Count, Carry2, En, Clk, Rst);
+    output reg [2:0] Count; // 3-bit register to store the counter value
+    output wire Carry2;     // Wire to indicate an overflow
+    input wire En, Clk, Rst; // Enable, Clock, and Reset inputs
+
+    wire [2:0] Carry, Sum;
+
+    // Instantiate the 3-bit counter module
+    Threebit_counter UC1(Sum, Carry2, Count, En);
+
+    always @(posedge Clk or posedge Rst) begin
+        if (Rst)
+            Count <= 0; // Reset condition
+        else
+            Count <= Sum; // Update count with sum when enabled
+    end
+endmodule
+
+// Module: Threebit_counter
+// Inputs: enable, 3-bit carry signal, and 3-bit sum
+// Outputs: sum, overflow carry, carry-out, enable signal
+module Threebit_counter(Sum, Carry2, Cout, En);
+    input wire En;         // Enable signal for the counter
+    input wire [2:0] Cout; // 3-bit carry
+    output wire [2:0] Sum; // 3-bit output for sum
+    output wire Carry2;    // Overflow carry output
+
+    wire [2:0] Carry;
+
+    // Half adder instances
+    half_adder adder0(.S(Sum[0]), .Cout(Carry[0]), .A(En), .B(Cout[0]));
+    half_adder adder1(.S(Sum[1]), .Cout(Carry[1]), .A(En), .B(Cout[1]));
+    half_adder adder2(.S(Sum[2]), .Cout(Carry2),  .A(En), .B(Cout[2]));
+endmodule
