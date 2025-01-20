@@ -1,0 +1,74 @@
+module combination_lock_fsm(
+    // Output and input are wires
+    output reg [2:0] state,
+    output wire [3:0] Lock,
+    input wire Key1,
+    input wire Key2,
+    input wire [3:0] Password,
+    input wire Reset,   // Input bit asserted for incrementing the state
+    input wire Clk      // Clock and Reset inputs
+);
+
+    // Parameters make the code much more readable
+    parameter S0 = 3'b000; // Initial state
+    parameter S1 = 3'b001; // First unlocked state
+    parameter S2 = 3'b010; // Second unlocked state
+    parameter S3 = 3'b011; // Final unlocked state
+    parameter S4 = 3'b100; // Saturation state
+
+    // Intermediate nets
+    reg [2:0] nextState; // Next state logic, driven in always block
+
+    // Describe next-state logic
+    always @(*)
+        case (state)
+            S0: begin
+                if (Key1 == 1 && Password == 4'd13)   // Go to state S1 if input is asserted
+                    nextState = S1;
+                else
+                    nextState = S0;                  // Stay in S0
+            end
+            S1: begin
+                if (Key2 == 1 && Password == 4'd7)   // Go to state S2 if input is asserted
+                    nextState = S2;
+                else if (Key2 == 1 && Password != 4'd7) // Go back to S0
+                    nextState = S0;
+                else
+                    nextState = S1;                  // Stay in S1
+            end
+            S2: begin
+                if (Key1 == 1 && Password == 4'd9)   // Go to state S3 if input is asserted
+                    nextState = S3;
+                else if (Key1 == 1 && Password != 4'd9) // Go back to S0
+                    nextState = S0;
+                else
+                    nextState = S2;                  // Stay in S2
+            end
+            S3: begin
+                if (Key2 == 1 && Password == 4'd1)   // Go to state S4 if input is asserted
+                    nextState = S4;
+                else if (Key2 == 1 && Password != 4'd1) // Go back to S0
+                    nextState = S0;
+                else
+                    nextState = S3;                  // Stay in S3
+            end
+            S4: begin
+                if (Reset)                           // Stay in S3 (saturation state)
+                    nextState = S0;
+                else
+                    nextState = S4;                  // Go back to S2
+            end
+            // No default needed because all states are covered
+        endcase
+
+    // Sync current state
+    always @(posedge Clk)
+        if (Reset)                                   // Synchronous logic to hold the Reset state to S0
+            state <= S0;
+        else
+            state <= nextState;
+
+    // Output logic, which is directly tied to the state
+    assign Lock = (state == S4) ? 4'b1111 : 4'b0000;
+
+endmodule
