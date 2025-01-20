@@ -1,0 +1,49 @@
+`default_nettype none
+
+/* This module describes the top-level traffic
+   light controller module discussed in lab */
+
+module tlc_controller_ver1(
+    output wire [1:0] highwaySignal, farmSignal, // connected to LEDs
+    /* Let's output state for debugging! */
+    output wire [3:0] JB,
+    input wire Clk,
+    /* The buttons provide input to our top-level circuit */
+    input wire Rst, // use as reset
+    input wire farmSensor
+);
+
+    /* Intermediate nets */
+    wire RstSync;
+    wire farmSensorSync;
+    wire RstCount;
+    reg [30:0] Count;
+
+    assign JB[3] = RstCount;
+
+    /* Synchronize button inputs */
+    synchronizer syncRst(RstSync, Rst, Clk);
+    synchronizer syncFarmSensor(farmSensorSync, farmSensor, Clk);
+
+    /* Instantiate FSM */
+    tlc_fsm FSM(
+        .state(JB[2:0]),
+        .RstCount(RstCount),
+        .highwaySignal(highwaySignal),
+        .farmSignal(farmSignal),
+        .Count(Count),
+        .Clk(Clk),
+        .Rst(RstSync),
+        .farmSensor(farmSensorSync)
+    );
+
+    /* Describe Counter with a synchronous reset here */
+    always @(posedge Clk) begin
+        if (RstSync || RstCount) begin
+            Count <= 31'd0;
+        end else begin
+            Count <= Count + 1;
+        end
+    end
+
+endmodule // ka-chow
