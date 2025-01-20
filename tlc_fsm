@@ -1,0 +1,106 @@
+module tlc_fsm(
+    output reg [2:0] state,          // Current state (for debugging)
+    output reg RstCount,             // Reset the counter
+    output reg [1:0] highwaySignal,  // Highway traffic light signal
+    output reg [1:0] farmSignal,     // Farm traffic light signal
+    input wire [30:0] Count,         // Counter value
+    input wire Clk,                  // Clock signal
+    input wire Rst,                  // Reset signal
+    input wire farmSensor            // New sensor input
+);
+
+    // State parameters
+    parameter S_rst = 3'b000,        // Reset state
+              S0 = 3'b001,          // Both red
+              S1 = 3'b010,          // Highway green, farm red
+              S2 = 3'b011,          // Highway yellow, farm red
+              S3 = 3'b100,          // Both red
+              S4 = 3'b101,          // Highway red, farm green
+              S5 = 3'b110;          // Highway red, farm yellow
+
+    // Timing constants (in clock cycles)
+    parameter seconds_1 = 50_000_000,     // 1 second
+              seconds_3 = 150_000_000,    // 3 seconds
+              seconds_15 = 750_000_000,   // 15 seconds
+              seconds_30 = 1_500_000_000; // 30 seconds
+
+    // Signal color parameters
+    parameter red = 2'b01,
+              yellow = 2'b10,
+              green = 2'b11;
+
+    // Next state logic
+    reg [2:0] nextState;
+
+    // Sequential logic for state transition
+    always @(posedge Clk or posedge Rst) begin
+        if (Rst) begin
+            state <= S_rst;  // Reset to reset state
+        end else begin
+            state <= nextState; // Transition to next state
+        end
+    end
+
+    // Next state logic with farmSensor integration
+    always @(*) begin
+        case (state)
+            S_rst: nextState = S0;
+            S0: nextState = (Count >= seconds_1) ? S1 : S0;
+            S1: nextState = (Count >= seconds_30 && farmSensor) ? S2 : S1;
+            S2: nextState = (Count >= seconds_3) ? S3 : S2;
+            S3: nextState = (Count >= seconds_1) ? S4 : S3;
+            S4: nextState = (Count >= seconds_3 && !farmSensor) ? S5 : 
+                            (farmSensor && Count >= seconds_15) ? S1 : S4;
+            S5: nextState = (Count >= seconds_3) ? S0 : S5;
+            default: nextState = S_rst; // Default to reset state
+        endcase
+    end
+
+    // Output logic based on the current state
+    always @(*) begin
+        case (state)
+            S_rst: begin
+                highwaySignal = red;
+                farmSignal = red;
+                RstCount = 1; // Assert reset counter during reset state
+            end
+            S0: begin
+                highwaySignal = red;
+                farmSignal = red;
+                RstCount = (Count >= seconds_1) ? 1 : 0;
+            end
+            S1: begin
+                highwaySignal = green;
+                farmSignal = red;
+                RstCount = (Count >= seconds_30 && farmSensor) ? 1 : 0;
+            end
+            S2: begin
+                highwaySignal = yellow;
+                farmSignal = red;
+                RstCount = (Count >= seconds_3) ? 1 : 0;
+            end
+            S3: begin
+                highwaySignal = red;
+                farmSignal = red;
+                RstCount = (Count >= seconds_1) ? 1 : 0;
+            end
+            S4: begin
+                highwaySignal = red;
+                farmSignal = green;
+                RstCount = (!farmSensor && Count >= seconds_3) ? 1 : 
+                           (farmSensor && Count >= seconds_15) ? 1 : 0;
+            end
+            S5: begin
+                highwaySignal = red;
+                farmSignal = yellow;
+                RstCount = (Count >= seconds_3) ? 1 : 0;
+            end
+            default: begin
+                highwaySignal = red;
+                farmSignal = red;
+                RstCount = 0;
+            end
+        endcase
+    end
+
+endmodule
